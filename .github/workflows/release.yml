@@ -30,6 +30,7 @@ jobs:
         with:
           images: ghcr.io/mnaatjes/docker-hello-world
           tags: |
+            type=raw,value={{tag}}
             type=semver,pattern={{version}}
 
       - name: Build and Push Docker Image
