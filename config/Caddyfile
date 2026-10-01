@@ -1,0 +1,15 @@
+:8080 {
+    root * /srv/www
+    file_server
+
+    log {
+        output file /var/log/caddy/access.log {
+            roll_size 10mb
+            roll_keep 3
+        }
+    }
+
+    handle_errors {
+        respond "{err.status_code} - Subspace Signal Lost"
+    }
+}

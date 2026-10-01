@@ -1,0 +1,14 @@
+{
+  "name": "docker-hello-world",
+  "version": "1.0.0",
+  "description": "Star Trek NX-01 Operations Portal",
+  "type": "module",
+  "scripts": {
+    "docs:dev": "vitepress dev docs",
+    "docs:build": "vitepress build docs",
+    "docs:preview": "vitepress preview docs"
+  },
+  "devDependencies": {
+    "vitepress": "^1.0.1"
+  }
+}

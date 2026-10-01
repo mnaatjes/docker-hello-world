@@ -1,21 +1,31 @@
-# syntax=docker/dockerfile:1.4
-# Sample multi-stage Dockerfile for bespoke container microservices
+# Stage 1: Build static documentation
+FROM node:20-alpine AS builder
 
-FROM alpine:3.20 AS base
-# hadolint ignore=DL3018
-RUN apk add --no-cache ca-certificates tzdata
-
-
-FROM base AS builder
 WORKDIR /build
-# Add compilation steps here if applicable
 
-FROM base AS runtime
-WORKDIR /app
-# Run as dedicated unprivileged user
-RUN addgroup -g 1000 appgroup && \
-    adduser -u 1000 -G appgroup -s /bin/sh -D appuser
-USER appuser
+COPY package.json package-lock.json* ./
+RUN npm install
+
+COPY docs/ ./docs/
+RUN npm run docs:build
+
+# Stage 2: Serve via unprivileged Caddy
+FROM caddy:2-alpine
+
+WORKDIR /srv/www
+
+# Copy static assets from builder stage
+COPY --from=builder /build/docs/.vitepress/dist /srv/www
+
+# Copy server configuration
+COPY config/Caddyfile /etc/caddy/Caddyfile
+
+# Ensure log directory exists and is writable
+RUN mkdir -p /var/log/caddy && chown -R 1000:1000 /var/log/caddy
 
 EXPOSE 8080
-CMD ["echo", "Container stack initialized"]
+
+HEALTHCHECK --interval=10s --timeout=3s --retries=3 --start-period=5s \
+  CMD ["wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/"]
+
+CMD ["caddy", "run", "--config", "/etc/caddy/Caddyfile", "--adapter", "caddyfile"]
